@@ -53,11 +53,12 @@ if (opt$genome == "pig") {
     xlim_02 <- c(0, 540000)
     xlim_03 <- c(0, 225000)
     xlim_07 <- c(0, 190000)
-    xlim_08 <- c(0, 30000)
-    xlim_09 <- c(0, 31000)
-    xlim_10 <- c(0, 50000)
-    xlim_11 <- c(0, 125000)
-    xlim_12 <- c(0, 21000)
+    xlim_08 <- c(0, 190000)
+    xlim_09 <- c(0, 30000)
+    xlim_10 <- c(0, 31000)
+    xlim_11 <- c(0, 50000)
+    xlim_12 <- c(0, 125000)
+    xlim_13 <- c(0, 21000)
 
 } else if (startsWith(opt$genome, "gg")) {
     ensembl <- 24356
@@ -75,11 +76,12 @@ if (opt$genome == "pig") {
     xlim_02 <- c(0, 400000)
     xlim_03 <- c(0, 160000)
     xlim_07 <- c(0, 100000)
-    xlim_08 <- c(0, 33000)
+    xlim_08 <- c(0, 100000)
     xlim_09 <- c(0, 33000)
-    xlim_10 <- c(0, 63000)
-    xlim_11 <- c(0, 40000)
-    xlim_12 <- c(0, 18000)
+    xlim_10 <- c(0, 33000)
+    xlim_11 <- c(0, 63000)
+    xlim_12 <- c(0, 40000)
+    xlim_13 <- c(0, 18000)
 
     if (opt$genome == "gg6") {
         specie  <- "GRCg6a"
@@ -320,7 +322,7 @@ ggsave(
 
 
 ### Transcripts per Tissue
-cat("06 - Ploting Transcripts per Tissue..\n")
+cat("06 - Ploting Transcripts per Tissue...\n")
 d %>%
     filter(trans_read_count >= 2) %>%
     select(tama_transcript_id, source_line) %>%
@@ -379,8 +381,42 @@ d %>%
         dpi = 125)
 
 
+# Gene per Timepoint (Ensembl)
+cat("08 - Ploting Gene per Timepoint (Ensembl)...\n")
+d %>%
+    filter(trans_read_count >= 2) %>%
+    select(tama_transcript_id, source_line, sources) %>%
+    filter(!is.na(source_line)) %>%
+    separate_rows(source_line, sep = ',') %>%
+    mutate(source_line = str_replace(source_line, '_P[12]', '')) %>%
+    distinct() %>%
+    count(source_line, sources) %>%
+    mutate(source_line = factor(source_line, levels = timepoints)) %>%
+    mutate(Tissue      = factor(str_replace(source_line, match_stages, ''), levels = tissues)) %>%
+    mutate(sources = ifelse(sources == 'isoseq', sources, 'ensembl')) %>%
+    ggplot(aes(n, source_line, fill = sources)) +
+        geom_col(position = "dodge") +
+        geom_text(
+            aes(label = n),
+            hjust = -0.1,
+            position = position_dodge(1),
+            size = 3) +
+        labs(
+            title = paste0(specie, " - Number of transcripts per Timepoint (Ensembl)"),
+            x = "Number of transcripts",
+            y = "Timepoints") +
+        xlim(xlim_08)
+
+ggsave(
+    paste0("TRANSCRIPTS_08-geom_col_-_", specie, "_-_FILTERED_-_Number_of_transcripts_per_timepoint_ensembl.png"),
+    units = "px",
+    width = 755,
+    height = 610,
+    dpi = 125)
+
+
 ### Feelnc annotation
-cat("08 - Ploting Feelnc annotation...\n")
+cat("09 - Ploting Feelnc annotation...\n")
 d %>%
     filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
     filter(trans_read_count >= 2) %>%
@@ -390,14 +426,14 @@ d %>%
     ggplot(aes(n, feelnc_biotype)) +
     geom_col() +
     geom_text(aes(label = n), hjust = -0.1) +
-    xlim(xlim_08) +
+    xlim(xlim_09) +
     labs(
         title = paste0(specie, " - Feelnc lncRNA annotation"),
         x = "Number of transcripts",
         y = element_blank())
 
 ggsave(
-    paste0("TRANSCRIPTS_08-geom_col_-_", specie, "_-_FILTERED_-_Feelnc_annotation.png"),
+    paste0("TRANSCRIPTS_09-geom_col_-_", specie, "_-_FILTERED_-_Feelnc_annotation.png"),
     units = "px",
     width = 755,
     height = 610,
@@ -405,7 +441,7 @@ ggsave(
 
 
 ### Feelnc annotation - Ensembl
-cat("09 - Ploting Feelnc annotation - Ensembl...\n")
+cat("10 - Ploting Feelnc annotation - Ensembl...\n")
 d %>%
     filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
     filter(trans_read_count >= 2) %>%
@@ -417,7 +453,7 @@ d %>%
     ggplot(aes(n, feelnc_biotype, fill = sources)) +
     geom_col(position = "dodge") +
     geom_text(aes(label = n), position = position_dodge(0.9), hjust = -0.1) +
-    xlim(xlim_09) +
+    xlim(xlim_10) +
     labs(
         title = paste0(specie, " - Feelnc lncRNA annotation (Known genes)"),
         x = "Number of transcripts",
@@ -425,7 +461,7 @@ d %>%
     theme(legend.position = "bottom", legend.title = element_blank())
 
 ggsave(
-    paste0("TRANSCRIPTS_09-geom_col_-_", specie, "_-_FILTERED_-_Feelnc_annotation_ensembl.png"),
+    paste0("TRANSCRIPTS_10-geom_col_-_", specie, "_-_FILTERED_-_Feelnc_annotation_ensembl.png"),
     units = "px",
     width = 755,
     height = 610,
@@ -433,7 +469,7 @@ ggsave(
 
 
 ## Feelnc annotation - read_support
-cat("10 - Ploting Feelnc annotation - read_support...\n")
+cat("11 - Ploting Feelnc annotation - read_support...\n")
 d %>%
     filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
     mutate(read_count = ifelse(trans_read_count == 1, "=1", ">=2")) %>%
@@ -449,10 +485,10 @@ d %>%
         x = "Number of transcripts",
         y = element_blank()) +
     theme(legend.position = "bottom", legend.title = element_blank()) +
-    xlim(xlim_10)
+    xlim(xlim_11)
 
 ggsave(
-    paste0("TRANSCRIPTS_10-geom_col_-_", specie, "_-_FILTERED_-_Feelnc_annotation_read_support.png"),
+    paste0("TRANSCRIPTS_11-geom_col_-_", specie, "_-_FILTERED_-_Feelnc_annotation_read_support.png"),
     units = "px",
     width = 755,
     height = 610,
@@ -460,7 +496,7 @@ ggsave(
 
 
 ### Number of exons per transcript
-cat("11 - Ploting Number of exons per transcript...\n")
+cat("12 - Ploting Number of exons per transcript...\n")
 d %>%
     filter(trans_read_count >= 2) %>%
     filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
@@ -476,10 +512,10 @@ d %>%
         x     = "Number of transcripts",
         y     = "Number of exons") +
     geom_text(aes(label = n), hjust = -0.1) +
-    xlim(xlim_11)
+    xlim(xlim_12)
 
 ggsave(
-    paste0("TRANSCRIPTS_11-geom_col_-_", specie, "_-_FILTERED_-_Exons_per_transcripts.png"),
+    paste0("TRANSCRIPTS_12-geom_col_-_", specie, "_-_FILTERED_-_Exons_per_transcripts.png"),
     units = "px",
     width = 755,
     height = 610,
@@ -487,7 +523,7 @@ ggsave(
 
 
 ### Number of specific transcripts
-cat("12 - Ploting Number of specific transcripts...\n")
+cat("13 - Ploting Number of specific transcripts...\n")
 d %>%
     filter(trans_read_count >= 2) %>%
     select(tama_transcript_id, source_line) %>%
@@ -512,10 +548,10 @@ d %>%
         y = "Timepoint") +
     theme(legend.position = "bottom") +
     guides(fill = guide_legend(ncol = 10)) +
-    xlim(xlim_12)
+    xlim(xlim_13)
 
 ggsave(
-    paste0("TRANSCRIPTS_12-geom_col_-_", specie, "_-_FILTERED_-_Number_of_specific_transcripts.png"),
+    paste0("TRANSCRIPTS_13-geom_col_-_", specie, "_-_FILTERED_-_Number_of_specific_transcripts.png"),
     units = "px",
     width = 755,
     height = 610,

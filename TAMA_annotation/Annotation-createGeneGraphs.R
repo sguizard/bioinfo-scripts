@@ -49,6 +49,11 @@ if (opt$genome == "pig") {
         "30dpf_Muscle", "70dpf_Muscle", "NB_Muscle",
         "30dpf_Skin",   "70dpf_Skin",   "NB_Skin"))
     match_stages <- '(30dpf|70dpf|NB)_'
+    xlim_02 <- c(0, 85000)
+    xlim_08 <- c(0, 40000)
+    xlim_09 <- c(0, 65000)
+    xlim_10 <- c(0, 8000)
+
 } else if (startsWith(opt$genome, "gg")) {
     ensembl <- 24356
     kuo     <- 29013
@@ -62,6 +67,9 @@ if (opt$genome == "pig") {
         "E8_Muscle", "E15_Muscle", "HC_Muscle",
         "E8_Skin",   "E15_Skin",   "HC_Skin"))
     match_stages <- '(E8|E15|HC)_'
+    xlim_08 <- c(0, 17000)
+    xlim_09 <- c(0, 12500)
+    xlim_10 <- c(0, 1500)
 
     if (opt$genome == "gg6") {
         specie  <- "GRCg6a"
@@ -76,7 +84,7 @@ if (opt$genome == "pig") {
 d <- read_tsv(file = opt$data)
 
 # Gene Number
-cat("Ploting Gene Number...\n")
+cat("01 - Ploting Gene Number...\n")
 if (specie == "Sscrofa11.1") {
     d %>%
         select(
@@ -127,7 +135,7 @@ ggsave(
 
 
 # Gene Number Ensembl
-cat("Ploting Gene Number Ensembl...\n")
+cat("02 - Ploting Gene Number Ensembl...\n")
 if (specie == "Sscrofa11.1") {
     d %>%
         select(
@@ -155,8 +163,8 @@ if (specie == "Sscrofa11.1") {
             labs(
                 title = paste0(specie, " - Total number of genes"),
                 x = "Number of genes",
-                y = "source") + 
-            xlim(0, 85000)
+                y = "source") +
+            xlim(xlim_02)
 } else {
     d %>%
         select(
@@ -197,7 +205,7 @@ ggsave(
 
 
 # Read support
-cat("Ploting Read support...\n")
+cat("03 - Ploting Read support...\n")
 d %>%
     select(
         tama_gene_id,   tama_transcript_id, ens_gene,
@@ -230,7 +238,7 @@ ggsave(
 
 
 # Transcripts per gene
-cat("Ploting Transcripts per gene...\n")
+cat("04 - Ploting Transcripts per gene...\n")
 d %>%
     filter(trans_read_count >= 2|is.na(trans_read_count)) %>%
     select(tama_gene_id, tama_transcript_id, sources) %>%
@@ -262,8 +270,8 @@ ggsave(
     dpi = 125)
 
 
-# Genes per Dev. stage
-cat("Ploting Genes per Dev. stage...\n")
+# Gene per Dev. stage
+cat("05 - Ploting Gene per Dev. stage...\n")
 d %>%
     filter(trans_read_count >= 2) %>%
     select(tama_gene_id, source_line) %>%
@@ -295,7 +303,7 @@ ggsave(
 
 
 # Gene per Tissue
-cat("Ploting Gene per Tissue...\n")
+cat("06 - Ploting Gene per Tissue...\n")
 d %>%
     filter(trans_read_count >= 2) %>%
     select(tama_gene_id, source_line) %>%
@@ -327,7 +335,7 @@ ggsave(
 
 
 # Gene per Timepoint
-cat("Ploting Gene per Timepoint...\n")
+cat("07 - Ploting Gene per Timepoint...\n")
 d %>%
     filter(trans_read_count >= 2) %>%
     select(tama_gene_id, source_line) %>%
@@ -357,53 +365,66 @@ ggsave(
     dpi = 125)
 
 
-# Number of exons per genes
-# NB: Number of exons == Maximum number of exons in gene's transcripts
-cat("Ploting Number of exons per genes...\n")
-if (specie == "Sscrofa11.1") {
-    d %>%
-        filter(trans_read_count >= 2) %>%
-        filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
-        select(tama_gene_id, blockCount) %>%
-        distinct() %>%
-        group_by(tama_gene_id) %>%
-        top_n(n = 1, wt = blockCount) %>%
-        ungroup() %>%
-        mutate(blockCount = ifelse(blockCount >= 20, ">=20", blockCount)) %>%
-        mutate(blockCount = factor(blockCount, levels = rev(c(seq(1, 100, 1), ">=20")))) %>%
-        count(blockCount) %>%
-        ggplot(aes(n, blockCount)) +
-            geom_col() +
-            labs(
-                title = paste0(specie, " - Number of exons per gene"),
-                x = "Number of genes",
-                y = "Number of exons") +
-            geom_text(aes(label = n), hjust = -0.1) +
-            xlim(0, 65000)
-} else {
-    d %>%
-        filter(trans_read_count >= 2) %>%
-        filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
-        select(tama_gene_id, blockCount) %>%
-        distinct() %>%
-        group_by(tama_gene_id) %>%
-        top_n(n = 1, wt = blockCount) %>%
-        ungroup() %>%
-        mutate(blockCount = ifelse(blockCount >= 20, ">=20", blockCount)) %>%
-        mutate(blockCount = factor(blockCount, levels = rev(c(seq(1, 100, 1), ">=20")))) %>%
-        count(blockCount) %>%
-        ggplot(aes(n, blockCount)) +
-            geom_col() +
-            labs(
-                title = paste0(specie, " - Number of exons per gene"),
-                x = "Number of genes",
-                y = "Number of exons") +
-            geom_text(aes(label = n), hjust = -0.1) +
-            xlim(0, 12500)
-}
+# Gene per Timepoint (Ensembl)
+cat("08 - Ploting Gene per Timepoint (Ensembl)...\n")
+d %>%
+    filter(trans_read_count >= 2) %>%
+    select(tama_gene_id, source_line, sources) %>%
+    filter(!is.na(source_line)) %>%
+    separate_rows(source_line, sep = ',') %>%
+    mutate(source_line = str_replace(source_line, '_P[12]', '')) %>%
+    distinct() %>%
+    count(source_line, sources) %>%
+    mutate(source_line = factor(source_line, levels = timepoints)) %>%
+    mutate(Tissue      = factor(str_replace(source_line, match_stages, ''), levels = tissues)) %>%
+    mutate(sources = ifelse(sources == 'isoseq', sources, 'ensembl')) %>%
+    ggplot(aes(n, source_line, fill = sources)) +
+        geom_col(position = "dodge") +
+        geom_text(
+            aes(label = n),
+            hjust = -0.1,
+            position = position_dodge(1),
+            size = 3) +
+        labs(
+            title = paste0(specie, " - Number of genes per Timepoint (Ensembl)"),
+            x = "Number of genes",
+            y = "Timepoints") +
+        xlim(xlim_08)
 
 ggsave(
-    paste0("GENE_08-geom_col_-_", specie, "_-_FILTERED_-_Number_of_exons_per_genes.png"),
+    paste0("GENE_08-geom_col_-_", specie, "_-_FILTERED_-_Number_of_genes_per_timepoint_ensembl.png"),
+    units = "px",
+    width = 755,
+    height = 610,
+    dpi = 125)
+
+
+# Number of exons per genes
+# NB: Number of exons == Maximum number of exons in gene's transcripts
+cat("09 - Ploting Number of exons per genes...\n")
+d %>%
+    filter(trans_read_count >= 2) %>%
+    filter(sources %in% c("isoseq", "ensembl,isoseq")) %>%
+    select(tama_gene_id, blockCount) %>%
+    distinct() %>%
+    group_by(tama_gene_id) %>%
+    top_n(n = 1, wt = blockCount) %>%
+    ungroup() %>%
+    mutate(blockCount = ifelse(blockCount >= 20, ">=20", blockCount)) %>%
+    mutate(blockCount = factor(blockCount, levels = rev(c(seq(1, 100, 1), ">=20")))) %>%
+    count(blockCount) %>%
+    ggplot(aes(n, blockCount)) +
+        geom_col() +
+        labs(
+            title = paste0(specie, " - Number of exons per gene"),
+            x = "Number of genes",
+            y = "Number of exons") +
+        geom_text(aes(label = n), hjust = -0.1) +
+        xlim(xlim_09)
+
+
+ggsave(
+    paste0("GENE_09-geom_col_-_", specie, "_-_FILTERED_-_Number_of_exons_per_genes.png"),
     units = "px",
     width = 755,
     height = 610,
@@ -411,64 +432,37 @@ ggsave(
 
 
 # Number of specific genes
-cat("Ploting Number of specific genes...\n")
-if (specie == "Sscrofa11.1") {
-    d %>%
-        filter(trans_read_count >= 2) %>%
-        select(tama_gene_id, source_line) %>%
-        filter(!is.na(source_line)) %>%
-        separate_rows(source_line, sep = ",") %>%
-        mutate(source_line = str_replace(source_line, "_P[12]", "")) %>%
-        distinct() %>%
-        group_by(tama_gene_id) %>%
-        summarise(source_line = paste0(source_line, collapse = ",")) %>%
-        mutate(nSamples = str_count(source_line, ",")) %>%
-        filter(nSamples == 0) %>%
-        count(source_line) %>%
-        mutate(
-            source_line = factor(source_line,                                levels = timepoints),
-            Tissue      = factor(str_replace(source_line, match_stages, ""), levels = tissues)) %>%
-        ggplot(aes(n, source_line, fill = Tissue)) +
-            geom_col() +
-            geom_text(aes(label = n), hjust = -0.1) +
-            labs(
-                title = paste0(specie, " - Number of specific genes"),
-                x = "Number of specific genes",
-                y = "Timepoint") +
-            theme(legend.position = "bottom") +
-        guides(fill = guide_legend(ncol = 10)) +
-        xlim(0, 8000)
-} else {
-    d %>%
-        filter(trans_read_count >= 2) %>%
-        select(tama_gene_id, source_line) %>%
-        filter(!is.na(source_line)) %>%
-        separate_rows(source_line, sep = ",") %>%
-        mutate(source_line = str_replace(source_line, "_P[12]", "")) %>%
-        distinct() %>%
-        group_by(tama_gene_id) %>%
-        summarise(source_line = paste0(source_line, collapse = ",")) %>%
-        mutate(nSamples = str_count(source_line, ",")) %>%
-        filter(nSamples == 0) %>%
-        count(source_line) %>%
-        mutate(
-            source_line = factor(source_line,                                levels = timepoints),
-            Tissue      = factor(str_replace(source_line, match_stages, ""), levels = tissues)) %>%
-        ggplot(aes(n, source_line, fill = Tissue)) +
-            geom_col() +
-            geom_text(aes(label = n), hjust = -0.1) +
-            labs(
-                title = paste0(specie, " - Number of specific genes"),
-                x = "Number of specific genes",
-                y = "Timepoint") +
-            theme(legend.position = "bottom") +
-        guides(fill = guide_legend(ncol = 10)) +
-        xlim(0, 1500)
-}
+cat("10 - Ploting Number of specific genes...\n")
+d %>%
+    filter(trans_read_count >= 2) %>%
+    select(tama_gene_id, source_line) %>%
+    filter(!is.na(source_line)) %>%
+    separate_rows(source_line, sep = ",") %>%
+    mutate(source_line = str_replace(source_line, "_P[12]", "")) %>%
+    distinct() %>%
+    group_by(tama_gene_id) %>%
+    summarise(source_line = paste0(source_line, collapse = ",")) %>%
+    mutate(nSamples = str_count(source_line, ",")) %>%
+    filter(nSamples == 0) %>%
+    count(source_line) %>%
+    mutate(
+        source_line = factor(source_line,                                levels = timepoints),
+        Tissue      = factor(str_replace(source_line, match_stages, ""), levels = tissues)) %>%
+    ggplot(aes(n, source_line, fill = Tissue)) +
+        geom_col() +
+        geom_text(aes(label = n), hjust = -0.1) +
+        labs(
+            title = paste0(specie, " - Number of specific genes"),
+            x = "Number of specific genes",
+            y = "Timepoint") +
+        theme(legend.position = "bottom") +
+    guides(fill = guide_legend(ncol = 10)) +
+    xlim(xlim_10)
+
 
 
 ggsave(
-    paste0("GENE_09-geom_col_-_", specie, "_-_FILTERED_-_Number_of_specific_genes.png"),
+    paste0("GENE_10-geom_col_-_", specie, "_-_FILTERED_-_Number_of_specific_genes.png"),
     units = "px",
     width = 755,
     height = 610,
