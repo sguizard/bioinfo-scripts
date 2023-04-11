@@ -1,0 +1,3 @@
+#! /bin/sh
+
+perl -i -pe 'next if />/; s/(.{60})/$1\n/g' $1
