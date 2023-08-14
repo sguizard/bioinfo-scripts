@@ -3,8 +3,8 @@ read_blast7 <- function(file) {
     cmd    <- paste0("grep -e 'Fields:' ", file, "|head -n 1|sed '1s/# Fields: //'")
     header <- (system(cmd, intern = TRUE) %>% str_split(pattern = ", "))[[1]]
 
-    header <- header %>% str_replace("query acc.", "qid")
-    header <- header %>% str_replace("subject acc.", "sid")
+    header <- header %>% str_replace("query acc.ver", "qid")
+    header <- header %>% str_replace("subject acc.ver", "sid")
     header <- header %>% str_replace("% identity", "pident")
     header <- header %>% str_replace("alignment length", "alength")
     header <- header %>% str_replace("mismatches", "mm")
