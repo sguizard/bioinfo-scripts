@@ -19,6 +19,7 @@ read_blast7 <- function(file) {
     header <- header %>% str_replace("% query coverage per hsp", "qcovhsp")
     header <- header %>% str_replace("% query coverage per uniq subject", "qcovus")
     header <- header %>% str_replace("subject title", "stitle")
+    header <- header %>% str_replace("subject strand", "sstrand")
 
     read_tsv(
         file,
