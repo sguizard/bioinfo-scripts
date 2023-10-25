@@ -58,10 +58,6 @@ if (opt$genome == "pig") {
         "30dpf_Muscle", "70dpf_Muscle", "NB_Muscle",
         "30dpf_Skin",   "70dpf_Skin",   "NB_Skin"))
     match_stages <- "(30dpf|70dpf|NB)_"
-    xlim_02 <- c(0, 85000)
-    xlim_08 <- c(0, 40000)
-    xlim_09 <- c(0, 65000)
-    xlim_10 <- c(0, 8000)
 
 } else if (startsWith(opt$genome, "gg")) {
     stages <- rev(c("E8", "E15", "HC"))
@@ -74,9 +70,6 @@ if (opt$genome == "pig") {
         "E8_Muscle", "E15_Muscle", "HC_Muscle",
         "E8_Skin",   "E15_Skin",   "HC_Skin"))
     match_stages <- "(E8|E15|HC)_"
-    xlim_08 <- c(0, 17000)
-    xlim_09 <- c(0, 12500)
-    xlim_10 <- c(0, 1500)
 
     if (opt$genome == "gg6") {
         specie  <- "GRCg6a"
@@ -94,7 +87,7 @@ d <- read_tsv(file = opt$data)
 cat("00.1 - Counting genes...\n")
 ensembl <-
     read_gtf(opt$ensembl) %>%
-    filter(feature == "gene") %>%
+    filter(feature == "transcript") %>%
     nrow()
 
 cat("00.2 - Extract exons...\n")
@@ -137,7 +130,6 @@ d %>%
     select(
         merge_gene_id, merge_trans_id,
         sources_id_gene, trans_read_count) %>%
-    filter(trans_read_count >= 2) %>%
     filter(sources_id_gene %in% c("ISOseq", "Ensembl,ISOseq")) %>%
     distinct(merge_gene_id) %>%
     count() %>%
@@ -168,9 +160,7 @@ ggsave(
 # Gene Number Ensembl
 cat("02 - Ploting Gene Number Ensembl...\n")
 p <- d %>%
-    select(
-        merge_gene_id,   merge_trans_id,
-        Source = sources_id_gene, trans_read_count) %>%
+    select(merge_gene_id, merge_trans_id, Source = sources_id_gene) %>%
     filter(Source %in% c("ISOseq", "Ensembl,ISOseq")) %>%
     distinct(merge_gene_id, Source) %>%
     count(Source, name = "Count") %>%
@@ -187,12 +177,7 @@ p <- d %>%
     labs(
         title = paste0(specie, " - Total number of genes"),
         x = "Number of genes",
-        y = "") +
-    theme(legend.position = "bottom")
-
-# if (specie == "Sscrofa11.1"){
-#     p  + xlim(xlim_02)
-# }
+        y = "")
 
 ggsave(
     paste0(
