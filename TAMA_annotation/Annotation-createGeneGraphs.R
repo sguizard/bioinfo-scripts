@@ -653,7 +653,7 @@ d %>%
 
 ggsave(
     paste0(
-        "GENE_10-geom_col_-_",
+        "GENE_09-geom_col_-_",
         specie,
         "_-_Number_of_specific_genes.png"),
     units = "px",
@@ -698,7 +698,7 @@ d %>%
 
 ggsave(
     paste0(
-        "GENE_11-geom_col_-_",
+        "GENE_10-geom_col_-_",
         specie,
         "_-_Number_of_dev_stage_specific_genes.png"),
     units = "px",
@@ -745,7 +745,7 @@ d %>%
 
 ggsave(
     paste0(
-        "GENE_12-geom_col_-_",
+        "GENE_11-geom_col_-_",
         specie,
         "_-_Number_of_tissue_specific_genes.png"),
     units = "px",
