@@ -87,10 +87,10 @@ if (opt$genome == "pig") {
 cat("00 - Loading data...\n")
 d <- read_tsv(file = opt$data)
 
-cat("00.1 - Counting genes...\n")
+cat("00.1 - Counting transcripts...\n")
 ensembl <-
     read_gtf(opt$ensembl) %>%
-    filter(feature == "gene") %>%
+    filter(feature == "transcript") %>%
     nrow()
 
 cat("00.2 - Extract exons...\n")
@@ -146,7 +146,7 @@ d %>%
     ggplot(aes(n, src)) +
         geom_col() +
         geom_text(aes(label = n), hjust = -.1) +
-        scale_x_continuous(expand = expansion(mult = .16)) +
+        scale_x_continuous(expand = expansion(mult = .20)) +
         labs(
             title = paste0(specie, " - Total number of transcripts"),
             x = "Number of transcripts",
@@ -228,8 +228,8 @@ d %>%
         labs(
             title = paste0(
                 specie,
-                " - Total number of genes + Number of Exons"),
-            x = "Number of genes",
+                " - Total number of transcript + Number of Exons"),
+            x = "Number of transcripts",
             y = "") +
         scale_fill_viridis(discrete = TRUE) +
         theme(legend.position = "bottom") +
@@ -242,7 +242,7 @@ ggsave(
     paste0(
         "TRANSCRIPTS_03-geom_col_-_",
         specie,
-        "_-_Total_number_of_genes_ensembl_plus_exons.png"),
+        "_-_Total_number_of_transcript_ensembl_plus_exons.png"),
     units = "px",
     width = 755,
     height = 450,
@@ -358,7 +358,7 @@ ggsave(
 
 
 ### Read support
-cat("04 - Ploting Read Support...\n")
+cat("04.1 - Ploting Read Support...\n")
 d %>% 
     select(merge_trans_id, trans_read_count) %>% 
     mutate(cat =
@@ -373,8 +373,8 @@ d %>%
     ggplot(aes(n, cat)) +
         geom_col() +
         labs(
-            title = paste0(specie, " - Number of reads supporting genes"),
-            x = "Number of genes",
+            title = paste0(specie, " - Number of reads supporting transcripts"),
+            x = "Number of transcripts",
             y = "Number of reads") +
         geom_text(aes(label = n), hjust = -.1) +
         scale_x_continuous(expand = expansion(mult = .16))
@@ -392,7 +392,7 @@ ggsave(
 
 
 ### Read support Exons
-cat("04 - Ploting Read Support Exons...\n")
+cat("04.2 - Ploting Read Support Exons...\n")
 d %>% 
     select(merge_trans_id, trans_read_count, Exon = blockCount) %>% 
     mutate(cat =
@@ -416,8 +416,8 @@ d %>%
     ggplot(aes(n, cat, fill = Exon)) +
         geom_col() +
         labs(
-            title = paste0(specie, " - Number of reads supporting genes"),
-            x = "Number of genes",
+            title = paste0(specie, " - Number of reads supporting transcripts"),
+            x = "Number of transcripts",
             y = "Number of reads") +
         scale_x_continuous(expand = expansion(mult = .05)) +
         scale_fill_viridis(discrete = TRUE) +
@@ -426,7 +426,7 @@ d %>%
 
 ggsave(
     paste0(
-        "TRANSCRIPTS_05-geom_col_-_", 
+        "TRANSCRIPTS_04-geom_col_-_", 
         specie, 
         "_-_Number_of_reads_supporting_transcripts_exons.png"),
     units = "px",
@@ -457,14 +457,14 @@ d %>%
         geom_col() +
         geom_text(aes(label = n), hjust = -.1) +
         labs(
-            title = paste0(specie, " - Number of genes per Dev. Stage"),
+            title = paste0(specie, " - Number of transcripts per Dev. Stage"),
             x = "Number of transcripts",
             y = "Development stage") +
         scale_x_continuous(expand = expansion(mult = .15))
 
 ggsave(
     paste0(
-        "TRANSCRIPTS_06-geom_col_-_", 
+        "TRANSCRIPTS_05-geom_col_-_", 
         specie, 
         "_-_Number_of_transcripts_per_dev_stage.png"),
     units = "px",
@@ -474,7 +474,7 @@ ggsave(
 
 
 ### Transcripts per Tissue
-cat("07 - Ploting Transcripts per Tissue...\n")
+cat("06 - Ploting Transcripts per Tissue...\n")
 d %>%
     select(merge_trans_id, source_line) %>%
     separate_rows(source_line, sep = ",") %>%
@@ -495,7 +495,7 @@ d %>%
         geom_col() +
         geom_text(aes(label = n), hjust = -.1) +
         labs(
-            title = paste0(specie, " - Number of genes per Dev. Stage"),
+            title = paste0(specie, " - Number of transcripts per Dev. Stage"),
             x = "Number of transcripts",
             y = "Development stage") +
         scale_x_continuous(expand = expansion(mult = .15))
@@ -529,10 +529,10 @@ d %>%
         geom_col() +
         geom_text(aes(label = n), hjust = -.1) +
         labs(
-            title = paste0(specie, " - Number of genes per Timepoint"),
+            title = paste0(specie, " - Number of transcripts per Timepoint"),
             x = "Number of transcripts",
             y = "Timepoint") +
-        scale_x_continuous(expand = expansion(mult = .15)) +
+        scale_x_continuous(expand = expansion(mult = .20)) +
         guides(fill = guide_legend(reverse = TRUE))
 
     ggsave(
@@ -577,7 +577,7 @@ ggsave(
 
 
 ### Number of exons per transcript
-cat("10 - Ploting Number of exons per transcript...\n")
+cat("09 - Ploting Number of exons per transcript...\n")
 d %>% 
     select(merge_trans_id, Exon = blockCount) %>% 
     mutate(Project = "GENE-SWitCH") %>% 
@@ -593,16 +593,16 @@ d %>%
     ggplot(aes(Exon, n)) + 
     geom_col() + 
     facet_wrap(vars(Project), nrow = 2) + 
-    geom_text(aes(label = n), hjust = -.1, angle = 90) +
+    # geom_text(aes(label = n), hjust = -.1, angle = 90) +
         labs(
             title = paste0(specie, " - Number of Exons per Transcript"),
             x = "Number of Exons",
-            y = "Number of transcripts") +
-    scale_y_continuous(expand = expansion(mult = .30))
+            y = "Number of transcripts") # +
+    # scale_y_continuous(expand = expansion(mult = .50))
 
 ggsave(
     paste0(
-        "TRANSCRIPTS_10-geom_col_-_", 
+        "TRANSCRIPTS_09-geom_col_-_", 
         specie, 
         "_-_Exons_per_transcripts.png"),
     units = "px",
@@ -612,7 +612,7 @@ ggsave(
 
 
 ### Number of specific transcripts
-cat("11 - Ploting Number of specific transcripts...\n")
+cat("10 - Ploting Number of specific transcripts...\n")
 d %>% 
     select(merge_trans_id, source_line) %>% 
     separate_rows(source_line, sep = ",") %>% 
@@ -642,7 +642,7 @@ d %>%
 
 ggsave(
     paste0(
-        "TRANSCRIPTS_11-geom_col_-_", 
+        "TRANSCRIPTS_10-geom_col_-_", 
         specie, 
         "_-_Number_of_specific_transcripts.png"),
     units = "px",
@@ -652,7 +652,7 @@ ggsave(
 
 
 
-cat("12 - Ploting Number of Dev. Stage specific transcripts...\n")
+cat("11 - Ploting Number of Dev. Stage specific transcripts...\n")
 d %>%
     select(merge_trans_id, source_line) %>%
     separate_rows(source_line, sep = ",") %>%
@@ -686,7 +686,7 @@ d %>%
 
 ggsave(
     paste0(
-        "TRANSCRIPTS_12-geom_col_-_",
+        "TRANSCRIPTS_11-geom_col_-_",
         specie,
         "_-_Number_of_dev_stage_specific_transcipts.png"),
     units = "px",
@@ -696,7 +696,7 @@ ggsave(
 
 
 
-cat("13 - Ploting Number of Tissue specific transcripts...\n")
+cat("12 - Ploting Number of Tissue specific transcripts...\n")
 d %>%
     select(merge_trans_id, source_line) %>%
     separate_rows(source_line, sep = ",") %>%
@@ -732,11 +732,10 @@ d %>%
 
 ggsave(
     paste0(
-        "TRANSCRIPTS_13-geom_col_-_",
+        "TRANSCRIPTS_12-geom_col_-_",
         specie,
         "_-_Number_of_tissue_specific_transcripts.png"),
     units = "px",
     width = 755,
     height = 610,
     dpi = 125)
-

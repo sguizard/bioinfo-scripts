@@ -139,7 +139,7 @@ d %>%
     ggplot(aes(n, src)) +
         geom_col() +
         geom_text(aes(label = n), hjust = -.1) +
-        scale_x_continuous(expand = expansion(mult = .15)) +
+        scale_x_continuous(expand = expansion(mult = .20)) +
         labs(
             title = paste0(specie, " - Total number of genes"),
             x = "Number of genes",
@@ -703,7 +703,7 @@ ggsave(
         "_-_Number_of_dev_stage_specific_genes.png"),
     units = "px",
     width = 755,
-    height = 400,
+    height = 305,
     dpi = 125)
 
 
@@ -750,5 +750,5 @@ ggsave(
         "_-_Number_of_tissue_specific_genes.png"),
     units = "px",
     width = 755,
-    height = 610,
+    height = 305,
     dpi = 125)
