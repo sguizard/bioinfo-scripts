@@ -495,9 +495,9 @@ d %>%
         geom_col() +
         geom_text(aes(label = n), hjust = -.1) +
         labs(
-            title = paste0(specie, " - Number of transcripts per Dev. Stage"),
+            title = paste0(specie, " - Number of transcripts per Tissue"),
             x = "Number of transcripts",
-            y = "Development stage") +
+            y = "Tissue") +
         scale_x_continuous(expand = expansion(mult = .15))
 
 ggsave(
