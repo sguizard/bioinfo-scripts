@@ -282,8 +282,8 @@ d %>%
         facet_grid(Project ~ ., scales = "free") +
         scale_x_continuous(expand = expansion(mult = .15)) +
         labs(
-            title = paste0(specie, " - Total number of transcripts"),
-            x = "Number of transcripts + Exon Number",
+            title = paste0(specie, " - Number of exons"),
+            x = "Transcripts (%)",
             y = "") +
         scale_fill_viridis(discrete = TRUE) +
     theme(legend.position = "bottom") +
@@ -335,8 +335,8 @@ d %>%
         facet_grid(Project ~ ., scales = "free") +
         scale_x_continuous(expand = expansion(mult = .15)) +
         labs(
-            title = paste0(specie, " - Total number of transcripts"),
-            x = "Number of transcripts + Exon Number",
+            title = paste0(specie, " - Number of exons"),
+            x = "Transcripts (%)",
             y = "") +
         scale_fill_viridis(discrete = TRUE) +
     theme(legend.position = "bottom") +
@@ -498,7 +498,7 @@ d %>%
             title = paste0(specie, " - Number of transcripts per Tissue"),
             x = "Number of transcripts",
             y = "Tissue") +
-        scale_x_continuous(expand = expansion(mult = .15))
+        scale_x_continuous(expand = expansion(mult = .20))
 
 ggsave(
     paste0(
@@ -691,7 +691,7 @@ ggsave(
         "_-_Number_of_dev_stage_specific_transcipts.png"),
     units = "px",
     width = 755,
-    height = 400,
+    height = 305,
     dpi = 125)
 
 
@@ -737,5 +737,5 @@ ggsave(
         "_-_Number_of_tissue_specific_transcripts.png"),
     units = "px",
     width = 755,
-    height = 610,
+    height = 305,
     dpi = 125)

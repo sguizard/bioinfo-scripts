@@ -87,7 +87,7 @@ d <- read_tsv(file = opt$data)
 cat("00.1 - Counting genes...\n")
 ensembl <-
     read_gtf(opt$ensembl) %>%
-    filter(feature == "transcript") %>%
+    filter(feature == "gene") %>%
     nrow()
 
 cat("00.2 - Extract exons...\n")
@@ -234,7 +234,7 @@ d %>%
         labs(
             title = paste0(
                 specie,
-                " - Total number of genes + Number of Exons"),
+                " - Number of Exons"),
             x = "Number of genes",
             y = "") +
         scale_fill_viridis(discrete = TRUE) +
@@ -297,8 +297,8 @@ d %>%
         facet_grid(Project ~ ., scales = "free") +
         scale_x_continuous(expand = expansion(mult = .15)) +
         labs(
-            title = paste0(specie, " - Total number of genes"),
-            x = "Number of genes + Exon Number",
+            title = paste0(specie, " - Number of exons"),
+            x = "Gene (%)",
             y = "") +
         scale_fill_viridis(discrete = TRUE) +
     theme(legend.position = "bottom") +
@@ -359,8 +359,8 @@ d %>%
         facet_grid(Project ~ ., scales = "free") +
         scale_x_continuous(expand = expansion(mult = .15)) +
         labs(
-            title = paste0(specie, " - Total number of genes"),
-            x = "Number of genes + Exon Number",
+            title = paste0(specie, " - Number of exons"),
+            x = "Genes (%)",
             y = "") +
         scale_fill_viridis(discrete = TRUE) +
         theme(legend.position = "bottom") +
@@ -535,11 +535,12 @@ d %>%
     mutate(Tissue = fct_reorder(Tissue, n)) %>%
     ggplot(aes(n, Tissue)) +
         geom_col() +
-        geom_text(aes(label = n), hjust = 1.1) +
+        geom_text(aes(label = n), hjust = -.1) +
         labs(
             title = paste0(specie, " - Number of genes per Tissue"),
             x = "Number of genes",
-            y = "Tissue")
+            y = "Tissue") +
+    scale_x_continuous(expand = expansion(mult = .15))
 
 ggsave(
     paste0(
