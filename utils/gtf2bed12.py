@@ -32,9 +32,10 @@ parser = argparse.ArgumentParser(
     epilog=gpl, 
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('-g', '--gtf', help='GTF file to be converted in BED12 format', type=argparse.FileType(mode='r'), required=True)
-parser.add_argument('-b', '--bed', help='Name of the new BED12 file', type=str, required=False)
-parser.add_argument('-r', '--rgb', help='Annotation color. Format \'[0-255],[0-255],[0-255]\'', type=str, required=False)
+parser.add_argument('-g', '--gtf', help='GTF file to be converted in BED12 format'            , type=argparse.FileType(mode='r'), required=True)
+parser.add_argument('-b', '--bed', help='Name of the new BED12 file'                          , type=str                        , required=False)
+parser.add_argument('-i', '--inc', help='Include genes? Default = No'                         , type=bool                       , required=False)
+parser.add_argument('-r', '--rgb', help='Annotation color. Format \'[0-255],[0-255],[0-255]\'', type=str                        , required=False)
 
 args = parser.parse_args()
 
@@ -204,7 +205,7 @@ for line in gtf_file:
     if feature not in features2keep:
         continue
 
-    if feature == 'gene':
+    if feature == 'gene' and args.inc:
         initiateAnnotation(id)
         gene2bed(id)
         continue
@@ -223,7 +224,11 @@ for line in gtf_file:
         continue
 
 print("==> Sort annotations by start")
-bedDataKeys=sorted(bedData, key=lambda x: bedData[x]['start'])
+bedDataKeys=sorted(
+    bedData, 
+    key=lambda x: (
+        bedData[x]['seq'], 
+        bedData[x]['start']))
 
 bedFile=open(bed, 'w')
 
