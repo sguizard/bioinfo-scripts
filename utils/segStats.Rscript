@@ -1,0 +1,98 @@
+#! /usr/bin/env Rscript
+
+suppressMessages(library(tidyverse))
+suppressMessages(library(getopt()))
+source("/home/sguizard/Work/Dev/github/sguizard/bioinfo-scripts/utils/readBed.R")
+
+version <- "1.0.0"
+
+# Define script's options
+# Third column, 0 = no arg, 1 = mandatory arg, 2 = optional arg
+spec <- matrix(c(
+    "bed"        , "b", 1, "character",
+    "help"       , "h", 0, "logical"
+), byrow = TRUE, ncol = 4)
+
+opt <- getopt(spec)
+
+# Help requested?
+if (!is.null(opt$help)) {
+    help_msg <- paste(
+        "\n",
+        "segStats.Rscript",
+        paste0("version: ", version),
+        "",
+        "Usage ./segStats.Rscript -b ref.bed -o ref_stats.tsv",
+        "",
+        "--bed           -b  <character>  *     Directory containing ParseBio data:",
+        "--help          -h  <boolean>    X     Print this help message.",
+        "",
+        "*    = Mandatory option",
+        "X    = No value required",
+        "Else = default value",
+        "",
+        "If output_dir is not defined, results will be printed in directory <BED BASENAME>_stats.tsv.",
+        "",
+        sep = "\n"
+    )
+    cat(help_msg)
+    q(status = 1)
+}
+
+bname <- str_replace(opt$bed, ".bed$", "")
+
+# Check mandatory options (input_dir, count_max, count_min, feature)
+err_msg <- ""
+
+if (is.null(opt$bed)) { err_msg <- paste0(err_msg, "MISSING OPTION: --bed/-b\n") }
+
+if (!is.null(opt$bed) && !file.exists(opt$bed)) {
+    err_msg <- paste0(err_msg, "FILE ERROR: ", opt$bed, " file can't be found\n")
+}
+
+if (err_msg != "") {
+    cat("\n")
+    cat("= ❌ OPTION ERROR(S) =================\n")
+    cat(err_msg)
+    cat("======================================\n")
+    q(status = 1)
+}
+
+cat("= ⚙️  PARAMETERS =======================\n")
+cat(paste0("bed         = ", opt$bed        , "\n"))
+cat(paste0("output_file = ", paste0(bname, "_stats.tsv"), "\n"))
+cat("======================================\n")
+
+
+bed <- read_bed12(opt$bed)
+
+transcripts_n <- nrow(bed)
+
+seg_n <- 
+    bed %>%
+    filter(blockCount == 1) %>%
+    nrow()
+
+seg_p <- (seg_n / transcripts_n) * 100
+
+seg_length <-
+    bed %>%
+    filter(blockCount == 1) %>%
+    mutate(length = chromEnd - chromStart) %>%
+    pull(length)
+
+seg_length_min    <- min   (seg_length)
+seg_length_max    <- max   (seg_length)
+seg_length_mean   <- mean  (seg_length)
+seg_length_median <- median(seg_length)
+
+tibble(
+    genome            = bname,
+    transcripts_n     = transcripts_n,
+    seg_n             = seg_n,
+    seg_p             = seg_p,
+    seg_length_min    = seg_length_min,
+    seg_length_mean   = seg_length_median,
+    seg_length_median = seg_length_median,
+    seg_length_max    = seg_length_max
+) %>% write_tsv(paste0(bname, "_stats.tsv"))
