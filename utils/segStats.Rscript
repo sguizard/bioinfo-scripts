@@ -1,7 +1,7 @@
 #! /usr/bin/env Rscript
 
 suppressMessages(library(tidyverse))
-suppressMessages(library(getopt()))
+suppressMessages(library(getopt))
 source("/home/sguizard/Work/Dev/github/sguizard/bioinfo-scripts/utils/readBed.R")
 
 version <- "1.0.0"
@@ -9,8 +9,11 @@ version <- "1.0.0"
 # Define script's options
 # Third column, 0 = no arg, 1 = mandatory arg, 2 = optional arg
 spec <- matrix(c(
-    "bed"        , "b", 1, "character",
-    "help"       , "h", 0, "logical"
+    "bed"     , "b", 1, "character",
+    "gt"      , "g", 1, "character",
+    "tc"      , "c", 1, "character",
+    "taxonomy", "t", 1, "character",
+    "help"    , "h", 0, "logical"
 ), byrow = TRUE, ncol = 4)
 
 opt <- getopt(spec)
@@ -24,7 +27,10 @@ if (!is.null(opt$help)) {
         "",
         "Usage ./segStats.Rscript -b ref.bed -o ref_stats.tsv",
         "",
-        "--bed           -b  <character>  *     Directory containing ParseBio data:",
+        "--bed           -b  <character>  *     Genome ref anntation in bed12 format",
+        "--gt            -g  <character>  *     2 cols tsv with gene_id and transcript_id",
+        "--tc            -c  <character>  *     Number of transcript per gene. 2 cols tsv, gene_id and transcript_count",
+        "--taxonomy      -t  <character>  *     A tsv with the followinf cols: name, tax_id, superkingdom, kingdom, phylum, class, order, family, genus, species, subspecie",
         "--help          -h  <boolean>    X     Print this help message.",
         "",
         "*    = Mandatory option",
@@ -44,11 +50,24 @@ bname <- str_replace(opt$bed, ".bed$", "")
 # Check mandatory options (input_dir, count_max, count_min, feature)
 err_msg <- ""
 
-if (is.null(opt$bed)) { err_msg <- paste0(err_msg, "MISSING OPTION: --bed/-b\n") }
+if (is.null(opt$bed     )) { err_msg <- paste0(err_msg, "MISSING OPTION: --bed/-b\n") }
+if (is.null(opt$gt      )) { err_msg <- paste0(err_msg, "MISSING OPTION: --gt/-g\n")  }
+if (is.null(opt$tc      )) { err_msg <- paste0(err_msg, "MISSING OPTION: --tc/-c\n")  }
+if (is.null(opt$taxonomy)) { err_msg <- paste0(err_msg, "MISSING OPTION: --taxonomy/-t\n")  }
 
 if (!is.null(opt$bed) && !file.exists(opt$bed)) {
     err_msg <- paste0(err_msg, "FILE ERROR: ", opt$bed, " file can't be found\n")
 }
+if (!is.null(opt$gt) && !file.exists(opt$gt)) {
+    err_msg <- paste0(err_msg, "FILE ERROR: ", opt$gt, " file can't be found\n")
+}
+if (!is.null(opt$tc) && !file.exists(opt$tc)) {
+    err_msg <- paste0(err_msg, "FILE ERROR: ", opt$tc, " file can't be found\n")
+}
+if (!is.null(opt$taxonomy) && !file.exists(opt$taxonomy)) {
+    err_msg <- paste0(err_msg, "FILE ERROR: ", opt$tc, " file can't be found\n")
+}
+
 
 if (err_msg != "") {
     cat("\n")
@@ -59,40 +78,82 @@ if (err_msg != "") {
 }
 
 cat("= ⚙️  PARAMETERS =======================\n")
-cat(paste0("bed         = ", opt$bed        , "\n"))
+cat(paste0("bed         = ", opt$bed, "\n"))
+cat(paste0("gt          = ", opt$gt , "\n"))
+cat(paste0("tc          = ", opt$tc , "\n"))
 cat(paste0("output_file = ", paste0(bname, "_stats.tsv"), "\n"))
 cat("======================================\n")
 
 
 bed <- read_bed12(opt$bed)
+g2t <- read_tsv(opt$gt)
+tc  <- read_tsv(opt$tc)
+tax <- read_tsv(opt$taxonomy)
+
+bed <- left_join(bed, g2t, by = c("name" = "transcript_id"))
+bed <- left_join(bed, tc)
+
+genome <-
+    bname %>%
+    str_replace("\\..+", "") %>%
+    str_replace_all("_", " ") %>%
+    str_replace(" gca.+", "")
 
 transcripts_n <- nrow(bed)
 
-seg_n <- 
+seg_n <-
     bed %>%
     filter(blockCount == 1) %>%
     nrow()
 
 seg_p <- (seg_n / transcripts_n) * 100
 
-seg_length <-
+counting <-
+    bed %>%
+    mutate(
+        single_transcript_gene = ifelse(transcript_count == 1, TRUE, FALSE),
+        single_exon_transcript = ifelse(blockCount       == 1, TRUE, FALSE)) %>%
+    count(single_transcript_gene, single_exon_transcript) %>%
+    mutate(p = n / sum(n))
+
+mtg_met_n <- counting %>% filter(single_transcript_gene == FALSE, single_exon_transcript == FALSE) %>% pull(n)
+mtg_set_n <- counting %>% filter(single_transcript_gene == FALSE, single_exon_transcript == TRUE ) %>% pull(n)
+stg_met_n <- counting %>% filter(single_transcript_gene == TRUE , single_exon_transcript == FALSE) %>% pull(n)
+stg_set_n <- counting %>% filter(single_transcript_gene == TRUE , single_exon_transcript == TRUE ) %>% pull(n)
+
+mtg_met_p <- counting %>% filter(single_transcript_gene == FALSE, single_exon_transcript == FALSE) %>% pull(p)
+mtg_set_p <- counting %>% filter(single_transcript_gene == FALSE, single_exon_transcript == TRUE ) %>% pull(p)
+stg_met_p <- counting %>% filter(single_transcript_gene == TRUE , single_exon_transcript == FALSE) %>% pull(p)
+stg_set_p <- counting %>% filter(single_transcript_gene == TRUE , single_exon_transcript == TRUE ) %>% pull(p)
+
+
+set_length <-
     bed %>%
     filter(blockCount == 1) %>%
     mutate(length = chromEnd - chromStart) %>%
     pull(length)
 
-seg_length_min    <- min   (seg_length)
-seg_length_max    <- max   (seg_length)
-seg_length_mean   <- mean  (seg_length)
-seg_length_median <- median(seg_length)
+set_length_min    <- min   (set_length)
+set_length_max    <- max   (set_length)
+set_length_mean   <- mean  (set_length)
+set_length_median <- median(set_length)
 
-tibble(
-    genome            = bname,
+d <- tibble(
+    bed               = opt$bed,
+    genome            = genome,
     transcripts_n     = transcripts_n,
-    seg_n             = seg_n,
-    seg_p             = seg_p,
-    seg_length_min    = seg_length_min,
-    seg_length_mean   = seg_length_median,
-    seg_length_median = seg_length_median,
-    seg_length_max    = seg_length_max
-) %>% write_tsv(paste0(bname, "_stats.tsv"))
+    mtg_met_n         = ifelse(!is_empty(mtg_met_n)        , mtg_met_n        , 0),
+    mtg_set_n         = ifelse(!is_empty(mtg_set_n)        , mtg_set_n        , 0),
+    stg_met_n         = ifelse(!is_empty(stg_met_n)        , stg_met_n        , 0),
+    stg_set_n         = ifelse(!is_empty(stg_set_n)        , stg_set_n        , 0),
+    mtg_met_p         = ifelse(!is_empty(mtg_met_p)        , mtg_met_p        , 0),
+    mtg_set_p         = ifelse(!is_empty(mtg_set_p)        , mtg_set_p        , 0),
+    stg_met_p         = ifelse(!is_empty(stg_met_p)        , stg_met_p        , 0),
+    stg_set_p         = ifelse(!is_empty(stg_set_p)        , stg_set_p        , 0),
+    set_length_min    = ifelse(!is_empty(set_length_min)   , set_length_min   , 0),
+    set_length_mean   = ifelse(!is_empty(set_length_median), set_length_median, 0),
+    set_length_median = ifelse(!is_empty(set_length_median), set_length_median, 0),
+    set_length_max    = ifelse(!is_empty(set_length_max)   , set_length_max   , 0)) %>%
+left_join(tax, by = c("genome" = "name"))
+
+write_tsv(d, paste0(bname, "_stats.tsv"))
