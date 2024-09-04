@@ -1,6 +1,7 @@
 read_gff <- function(file) {
     require(readr)
-    read_tsv(
+
+    readr::read_tsv(
         file,
         col_names = c(
             "sequence",
@@ -27,7 +28,9 @@ read_gff <- function(file) {
 
 read_gtf <- function(file, separate_attributes = FALSE) {
     require(readr)
-    gtf <- read_tsv(
+    require(dplyr)
+
+    gtf <- readr::read_tsv(
         file,
         col_names = c(
             "sequence",
@@ -54,7 +57,7 @@ read_gtf <- function(file, separate_attributes = FALSE) {
     if (isTRUE(separate_attributes)) {
         gtf <-
             gtf %>%
-            mutate(
+            dplyr::mutate(
                 gene_id                      = str_match(attributes, 'gene_id "([^"]+)";')[,2],
                 gene_version                 = str_match(attributes, 'gene_version "([^"]+)";')[,2],
                 gene_name                    = str_match(attributes, 'gene_name "([^"]+)";')[,2],
@@ -72,7 +75,40 @@ read_gtf <- function(file, separate_attributes = FALSE) {
                 protein_version              = str_match(attributes, 'protein_version "([^"]+)";')[,2],
                 tag                          = str_match(attributes, 'tag "([^"]+)";')[,2],
                 projection_parent_transcript = str_match(attributes, 'projection_parent_transcript "([^"]+)";')[,2]) %>%
-            select(-attributes)
+            dplyr::select(-attributes)
     }
     return(gtf)
+}
+
+
+extractSEG <- function(object, out_file = NULL) {
+    require(dplyr)
+    require(readr)
+
+    gtf <-
+        read_gtf(object, separate_attributes = FALSE) %>%
+        dplyr::mutate(
+            transcript_id = str_match(attributes, 'transcript_id "([^"]+)";')[,2],
+            gene_id       = str_match(attributes, 'gene_id "([^"]+)";')[,2])
+
+    set <-
+        gtf %>%
+        dplyr::filter(feature == "exon") %>%
+        dplyr::count(transcript_id) %>%
+        dplyr::filter(n == 1) %>%
+        dplyr::select(-n)
+
+    seg <-
+        dplyr::semi_join(gtf, set) %>%
+        dplyr::distinct(gene_id)
+
+    seg_gtf <-
+        dplyr::semi_join(gtf, seg) %>%
+        dplyr::select(-transcript_id, -gene_id)
+
+    if (!is.null(out_file)) {
+        readr::write_tsv(seg_gtf, out_file)
+    }
+
+    return(seg_gtf)
 }
