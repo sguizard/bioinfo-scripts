@@ -10,7 +10,6 @@ library(GenomicFeatures) # makeTxDbFromGFF makeTxDbFromEnsembl
 
 spec <- matrix(c(
     "help"      , "h", 0 , "logical",
-    "sample_ids", "s", "", "character",
     "chr_length", "c", "", "character",
     "bw_dir"    , "b", "", "character",
     "genome"    , "g", "", "character",
@@ -24,12 +23,8 @@ if (!is.null(opt$help)) {
     cat(getopt(spec, usage = TRUE))
     q(status = 1)
 }
-if (is.null(opt$sample_ids)) {
-    cat("MISSING OPTION: --sample_ids \n")
-    q(status = 1)
-}
 if (is.null(opt$chr_length)) {
-    cat("MISSING OPTION: --organism \n")
+    cat("MISSING OPTION: --chr_length \n")
     q(status = 1)
 }
 if (is.null(opt$bw_dir)) {
@@ -49,13 +44,11 @@ if (is.null(opt$annot)) {
     q(status = 1)
 }
 
-# Load sample ids
-id <- read_csv(opt$sample_ids)
 
 # Load chromosomes lengths and prepare columns for Seqinfo
 chrNameLength <-
     read_tsv(
-        "chrNameLength.txt",
+        opt$chr_length,
         col_names = c("seqnames", "seqlenghts")) %>%
     mutate(
         isCicular = if_else(str_detect(seqnames, "^M"), TRUE, FALSE),
@@ -72,14 +65,13 @@ bw <-
     tibble(
         bw_plus  = list.files(path = opt$bw_dir, pattern = "*Unique.str1.out.bw"),
         bw_minus = list.files(path = opt$bw_dir, pattern = "*Unique.str2.out.bw"),
-        run_id   = str_extract(bw_plus, "([^_]+)")) %>%
-    left_join(id)
+        run_id   = str_extract(bw_plus, "CAGE_(.+)_R[12]"))
 
 # Prepare design object
 design <-
     bw %>%
     dplyr::select(
-        Name        = sample_id,
+        Name        = run_id,
         BigWigPlus  = bw_plus,
         BigWigMinus = bw_minus) %>%
     as.data.frame()
