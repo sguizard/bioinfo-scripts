@@ -84,7 +84,7 @@ rownames(design) <- design$Name
 bw_plus  <- BigWigFileList(bw$bw_plus)
 bw_minus <- BigWigFileList(bw$bw_minus)
 
-names(bw_plus) <- names(bw_minus) <- bw$sample_id
+names(bw_plus) <- names(bw_minus) <- bw$run_id
 
 # Quantify the number of CAGE-tags for each CTSSs from BigWig-files
 CTSSs <- quantifyCTSSs(
