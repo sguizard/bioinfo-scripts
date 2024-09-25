@@ -1,10 +1,6 @@
 #!/usr/bin/env Rscript
 
-library(tidyverse)
-library(CAGEfightR)
-library(GenomeInfoDb)    # SeqInfo
-library(rtracklayer)     # Export
-library(GenomicFeatures) # makeTxDbFromGFF makeTxDbFromEnsembl
+library(getopt)
 
 `%nin%` <- Negate(`%in%`)
 
@@ -44,6 +40,12 @@ if (is.null(opt$annot)) {
     q(status = 1)
 }
 
+# Loading libraries
+library(tidyverse)
+library(CAGEfightR)
+library(GenomeInfoDb)    # SeqInfo
+library(rtracklayer)     # Export
+library(GenomicFeatures) # makeTxDbFromGFF makeTxDbFromEnsembl
 
 # Load chromosomes lengths and prepare columns for Seqinfo
 chrNameLength <-
