@@ -135,7 +135,7 @@ export.bed(object = BCs, con = "BCs_min1sample_min10reads.bed")
 # Assign transcripts (TSS and enhancers)
 cat(paste0("==> ==> Assign transcripts", "\n"))
 txdb <- makeTxDbFromGFF(
-    file     = opt$gtf,
+    file     = opt$annot,
     format   = "gtf",
     organism = opt$organism)
 
