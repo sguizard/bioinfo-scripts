@@ -52,7 +52,7 @@ cat(paste0("==> Load ", opt$chr_length, "\n"))
 chrNameLength <-
     read_tsv(
         opt$chr_length,
-        col_names = c("seqnames", "seqlenghts")) %>%
+        col_names = c("seqnames", "seqlengths")) %>%
     mutate(
         isCicular = if_else(str_detect(seqnames, "^M"), TRUE, FALSE),
         genome = opt$genome)
@@ -60,7 +60,7 @@ chrNameLength <-
 cat(paste0("==> Prepare Seqinfo object", "\n"))
 ov_ars <- Seqinfo(
     seqnames   = chrNameLength$seqnames,
-    seqlengths = chrNameLength$seqlenghts,
+    seqlengths = chrNameLength$seqlengths,
     isCircular = chrNameLength$isCicular,
     genome     = chrNameLength$genome)
 
@@ -139,8 +139,10 @@ txdb <- makeTxDbFromGFF(
     format   = "gtf",
     organism = opt$organism)
 
-TCs <- assignTxID(TCs, txModels = txdb)
+TCs <- assignTxID  (TCs, txModels = txdb)
 TCs <- assignTxType(TCs, txModels = txdb)
+saveRDS(object = TCs, file = "TCs_min1sample_min10reads.rds")
 
-BCs_all <- assignTxID(BCs, txModels = txdb)
+BCs_all <- assignTxID  (BCs,     txModels = txdb)
 BCs_all <- assignTxType(BCs_all, txModels = txdb)
+saveRDS(object = BCs_all, file = "BCs_min1sample_min10reads.rds")
