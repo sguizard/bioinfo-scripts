@@ -81,29 +81,37 @@ read_gtf <- function(file, separate_attributes = FALSE) {
 }
 
 
-extractSEG <- function(object, out_file = NULL) {
+extractSEG <- function(file, out_file = NULL) {
     require(dplyr)
     require(readr)
 
-    gtf <-
-        read_gtf(object, separate_attributes = FALSE) %>%
+    gtf <- 
+        read_gtf(file) %>% 
         dplyr::mutate(
             transcript_id = str_match(attributes, 'transcript_id "([^"]+)";')[,2],
             gene_id       = str_match(attributes, 'gene_id "([^"]+)";')[,2])
 
+    # List Single Exon Transcript ids
     set <-
         gtf %>%
         dplyr::filter(feature == "exon") %>%
         dplyr::count(transcript_id) %>%
         dplyr::filter(n == 1) %>%
-        dplyr::select(-n)
+        dplyr::pull(transcript_id)
 
+    # List Single Exon Gene ids
     seg <-
-        dplyr::semi_join(gtf, set) %>%
-        dplyr::distinct(gene_id)
+        gtf %>%
+        dplyr::filter(transcript_id %in% set) %>%
+        dplyr::distinct(gene_id) %>%
+        dplyr::pull(gene_id)
 
+    # Extract rows Single Exon Transcripts and their associated gene line
     seg_gtf <-
-        dplyr::semi_join(gtf, seg) %>%
+        gtf %>%
+        dplyr::filter(
+            transcript_id %in% set | 
+            (gene_id      %in% seg & is.na(transcript_id))) %>%
         dplyr::select(-transcript_id, -gene_id)
 
     if (!is.null(out_file)) {
