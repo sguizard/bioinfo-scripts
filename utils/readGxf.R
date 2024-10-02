@@ -115,7 +115,7 @@ extractSEG <- function(file, out_file = NULL) {
         dplyr::select(-transcript_id, -gene_id)
 
     if (!is.null(out_file)) {
-        readr::write_tsv(seg_gtf, out_file, col_names = FALSE)
+        readr::write_tsv(seg_gtf, out_file, col_names = FALSE, escape = "none")
     }
 
     return(seg_gtf)
