@@ -63,23 +63,23 @@ read_gtf <- function(file, separate_attributes = FALSE) {
         gtf <-
             gtf %>%
             dplyr::mutate(
-                gene_id                      = str_match(attributes, 'gene_id "([^"]+)";')[,2],
-                gene_version                 = str_match(attributes, 'gene_version "([^"]+)";')[,2],
-                gene_name                    = str_match(attributes, 'gene_name "([^"]+)";')[,2],
-                gene_source                  = str_match(attributes, 'gene_source "([^"]+)";')[,2],
-                gene_biotype                 = str_match(attributes, 'gene_biotype "([^"]+)";')[,2],
-                transcript_id                = str_match(attributes, 'transcript_id "([^"]+)";')[,2],
-                transcript_version           = str_match(attributes, 'transcript_version "([^"]+)";')[,2],
-                transcript_name              = str_match(attributes, 'transcript_name "([^"]+)";')[,2],
-                transcript_source            = str_match(attributes, 'transcript_source "([^"]+)";')[,2],
-                transcript_biotype           = str_match(attributes, 'transcript_biotype "([^"]+)";')[,2],
-                exon_number                  = str_match(attributes, 'exon_number "([^"]+)";')[,2],
-                exon_id                      = str_match(attributes, 'exon_id "([^"]+)";')[,2],
-                exon_version                 = str_match(attributes, 'exon_version "([^"]+)";')[,2],
-                protein_id                   = str_match(attributes, 'protein_id "([^"]+)";')[,2],
-                protein_version              = str_match(attributes, 'protein_version "([^"]+)";')[,2],
-                tag                          = str_match(attributes, 'tag "([^"]+)";')[,2],
-                projection_parent_transcript = str_match(attributes, 'projection_parent_transcript "([^"]+)";')[,2]) %>%
+                gene_id                      = str_match(attributes, 'gene_id "([^"]+)"')[,2],
+                gene_version                 = str_match(attributes, 'gene_version "([^"]+)"')[,2],
+                gene_name                    = str_match(attributes, 'gene_name "([^"]+)"')[,2],
+                gene_source                  = str_match(attributes, 'gene_source "([^"]+)"')[,2],
+                gene_biotype                 = str_match(attributes, 'gene_biotype "([^"]+)"')[,2],
+                transcript_id                = str_match(attributes, 'transcript_id "([^"]+)"')[,2],
+                transcript_version           = str_match(attributes, 'transcript_version "([^"]+)"')[,2],
+                transcript_name              = str_match(attributes, 'transcript_name "([^"]+)"')[,2],
+                transcript_source            = str_match(attributes, 'transcript_source "([^"]+)"')[,2],
+                transcript_biotype           = str_match(attributes, 'transcript_biotype "([^"]+)"')[,2],
+                exon_number                  = str_match(attributes, 'exon_number "([^"]+)"')[,2],
+                exon_id                      = str_match(attributes, 'exon_id "([^"]+)"')[,2],
+                exon_version                 = str_match(attributes, 'exon_version "([^"]+)"')[,2],
+                protein_id                   = str_match(attributes, 'protein_id "([^"]+)"')[,2],
+                protein_version              = str_match(attributes, 'protein_version "([^"]+)"')[,2],
+                tag                          = str_match(attributes, 'tag "([^"]+)"')[,2],
+                projection_parent_transcript = str_match(attributes, 'projection_parent_transcript "([^"]+)"')[,2]) %>%
             dplyr::select(-attributes)
     }
     return(gtf)
@@ -121,27 +121,27 @@ read_gvf <- function(file, separate_attributes = FALSE) {
         gvf <-
             gvf %>%
             dplyr::mutate(
-                id                = str_match(attributes, 'ID=([^=;]+);')[,2],
-                alias             = str_match(attributes, 'Alias=([^=;]+);')[,2],
-                dbxref            = str_match(attributes, 'Dbxref=([^=;]+);')[,2],
-                reference_seq     = str_match(attributes, 'Reference_seq=([^=;]+);')[,2],
-                variant_seq       = str_match(attributes, 'Variant_seq=([^=;]+);')[,2],
-                total_reads       = str_match(attributes, 'Total_reads=([^=;]+);')[,2],
-                zygosity          = str_match(attributes, 'Zygosity=([^=;]+);')[,2],
-                variant_freq      = str_match(attributes, 'Variant_freq=([^=;]+);')[,2],
-                variant_effect    = str_match(attributes, 'Variant_effect=([^=;]+);')[,2],
-                start_range       = str_match(attributes, 'Start_range=([^=;]+);')[,2],
-                end_range         = str_match(attributes, 'End_range=([^=;]+);')[,2],
-                phased            = str_match(attributes, 'Phased=([^=;]+);')[,2],
-                genotype          = str_match(attributes, 'Genotype=([^=;]+);')[,2],
-                individual        = str_match(attributes, 'Individual=([^=;]+);')[,2],
-                variant_codon     = str_match(attributes, 'Variant_codon=([^=;]+);')[,2],
-                reference_codon   = str_match(attributes, 'Reference_codon=([^=;]+);')[,2],
-                variant_aa        = str_match(attributes, 'Variant_aa=([^=;]+);')[,2],
-                reference_aa      = str_match(attributes, 'Reference_aa=([^=;]+);')[,2],
-                breakpoint_detail = str_match(attributes, 'Breakpoint_detail=([^=;]+);')[,2],
-                breakpoint_range  = str_match(attributes, 'Breakpoint_range=([^=;]+);')[,2],
-                sequence_context  = str_match(attributes, 'Sequence_context=([^=;]+);')[,2]) %>%
+                id                = str_match(attributes, 'ID=([^=;]+)')[,2],
+                alias             = str_match(attributes, 'Alias=([^=;]+)')[,2],
+                dbxref            = str_match(attributes, 'Dbxref=([^=;]+)')[,2],
+                reference_seq     = str_match(attributes, 'Reference_seq=([^=;]+)')[,2],
+                variant_seq       = str_match(attributes, 'Variant_seq=([^=;]+)')[,2],
+                total_reads       = str_match(attributes, 'Total_reads=([^=;]+)')[,2],
+                zygosity          = str_match(attributes, 'Zygosity=([^=;]+)')[,2],
+                variant_freq      = str_match(attributes, 'Variant_freq=([^=;]+)')[,2],
+                variant_effect    = str_match(attributes, 'Variant_effect=([^=;]+)')[,2],
+                start_range       = str_match(attributes, 'Start_range=([^=;]+)')[,2],
+                end_range         = str_match(attributes, 'End_range=([^=;]+)')[,2],
+                phased            = str_match(attributes, 'Phased=([^=;]+)')[,2],
+                genotype          = str_match(attributes, 'Genotype=([^=;]+)')[,2],
+                individual        = str_match(attributes, 'Individual=([^=;]+)')[,2],
+                variant_codon     = str_match(attributes, 'Variant_codon=([^=;]+)')[,2],
+                reference_codon   = str_match(attributes, 'Reference_codon=([^=;]+)')[,2],
+                variant_aa        = str_match(attributes, 'Variant_aa=([^=;]+)')[,2],
+                reference_aa      = str_match(attributes, 'Reference_aa=([^=;]+)')[,2],
+                breakpoint_detail = str_match(attributes, 'Breakpoint_detail=([^=;]+)')[,2],
+                breakpoint_range  = str_match(attributes, 'Breakpoint_range=([^=;]+)')[,2],
+                sequence_context  = str_match(attributes, 'Sequence_context=([^=;]+)')[,2]) %>%
             dplyr::select(-attributes)
     }
     return(gvf)
@@ -154,8 +154,8 @@ extract_seg <- function(file, out_file = NULL) {
     require(dplyr)
     require(readr)
 
-    gtf <- 
-        read_gtf(file) %>% 
+    gtf <-
+        read_gtf(file) %>%
         dplyr::mutate(
             transcript_id = str_match(attributes, 'transcript_id "([^"]+)";')[,2],
             gene_id       = str_match(attributes, 'gene_id "([^"]+)";')[,2])
