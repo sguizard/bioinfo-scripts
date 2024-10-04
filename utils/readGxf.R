@@ -1,3 +1,5 @@
+#### read_gff ###########################################
+# https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 read_gff <- function(file) {
     require(readr)
 
@@ -26,6 +28,9 @@ read_gff <- function(file) {
     comment = "#")
 }
 
+
+
+#### read_gtf ###########################################
 read_gtf <- function(file, separate_attributes = FALSE) {
     require(readr)
     require(dplyr)
@@ -81,7 +86,71 @@ read_gtf <- function(file, separate_attributes = FALSE) {
 }
 
 
-extractSEG <- function(file, out_file = NULL) {
+
+#### read_gvf ###########################################
+# https://github.com/The-Sequence-Ontology/Specifications/blob/master/gvf.md
+read_gvf <- function(file, separate_attributes = FALSE) {
+    require(readr)
+    require(dplyr)
+
+    gvf <- readr::read_tsv(
+        file,
+        col_names = c(
+            "sequence",
+            "source",
+            "feature",
+            "start",
+            "end",
+            "score",
+            "strand",
+            "phase",
+            "attributes"),
+        col_types = cols(
+            sequence   = "c",
+            source     = "c",
+            feature    = "c",
+            start      = "i",
+            end        = "i",
+            score      = "c",
+            strand     = "c",
+            phase      = "c",
+            attributes = "c"),
+            comment    = "#")
+
+    if (isTRUE(separate_attributes)) {
+        gvf <-
+            gvf %>%
+            dplyr::mutate(
+                id                = str_match(attributes, 'ID=([^=;]+);')[,2],
+                alias             = str_match(attributes, 'Alias=([^=;]+);')[,2],
+                dbxref            = str_match(attributes, 'Dbxref=([^=;]+);')[,2],
+                reference_seq     = str_match(attributes, 'Reference_seq=([^=;]+);')[,2],
+                variant_seq       = str_match(attributes, 'Variant_seq=([^=;]+);')[,2],
+                total_reads       = str_match(attributes, 'Total_reads=([^=;]+);')[,2],
+                zygosity          = str_match(attributes, 'Zygosity=([^=;]+);')[,2],
+                variant_freq      = str_match(attributes, 'Variant_freq=([^=;]+);')[,2],
+                variant_effect    = str_match(attributes, 'Variant_effect=([^=;]+);')[,2],
+                start_range       = str_match(attributes, 'Start_range=([^=;]+);')[,2],
+                end_range         = str_match(attributes, 'End_range=([^=;]+);')[,2],
+                phased            = str_match(attributes, 'Phased=([^=;]+);')[,2],
+                genotype          = str_match(attributes, 'Genotype=([^=;]+);')[,2],
+                individual        = str_match(attributes, 'Individual=([^=;]+);')[,2],
+                variant_codon     = str_match(attributes, 'Variant_codon=([^=;]+);')[,2],
+                reference_codon   = str_match(attributes, 'Reference_codon=([^=;]+);')[,2],
+                variant_aa        = str_match(attributes, 'Variant_aa=([^=;]+);')[,2],
+                reference_aa      = str_match(attributes, 'Reference_aa=([^=;]+);')[,2],
+                breakpoint_detail = str_match(attributes, 'Breakpoint_detail=([^=;]+);')[,2],
+                breakpoint_range  = str_match(attributes, 'Breakpoint_range=([^=;]+);')[,2],
+                sequence_context  = str_match(attributes, 'Sequence_context=([^=;]+);')[,2]) %>%
+            dplyr::select(-attributes)
+    }
+    return(gvf)
+}
+
+
+
+#### extract_seg ###########################################
+extract_seg <- function(file, out_file = NULL) {
     require(dplyr)
     require(readr)
 
