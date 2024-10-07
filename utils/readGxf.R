@@ -74,6 +74,7 @@ separate_attributes <- function(obj) {
 
 #### read_gxf_and_separate ###########################################
 read_gxf_and_separate <- function(file) {
+    cat(paste0("==> Reading ", file, "\n"))
     gxf <- read_gxf(file = file)
     gxf <- separate_attributes(gxf)
 
