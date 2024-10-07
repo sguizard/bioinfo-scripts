@@ -1,9 +1,10 @@
+require(readr)
+require(dplyr)
+require(purrr)
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff.md
 
 #### read_gff ###########################################
 read_gxf <- function(file) {
-    require(readr)
-
     readr::read_tsv(
         file,
         col_names = c(
@@ -33,10 +34,6 @@ read_gxf <- function(file) {
 
 #### separate_attributes ########################################
 separate_attributes <- function(obj) {
-    require(readr)
-    require(dplyr)
-    require(purrr)
-
     add_att <- function(obj, name) {
         cat(paste0("==> Adding ", name, "\n"))
         pattern <- paste0(name, '[ =]"?([^"=;]+)"?')
@@ -85,9 +82,6 @@ read_gxf_and_separate <- function(file) {
 
 #### extract_seg ###########################################
 extract_seg <- function(file, out_file = NULL) {
-    require(dplyr)
-    require(readr)
-
     gtf <-
         read_gtf(file) %>%
         dplyr::mutate(
