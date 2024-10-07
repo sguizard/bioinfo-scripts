@@ -1,3 +1,5 @@
+# https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff.md
+
 #### read_gff ###########################################
 read_gxf <- function(file) {
     require(readr)
@@ -29,63 +31,53 @@ read_gxf <- function(file) {
 
 
 
-#### separate_attributes_gtf ########################################
-# https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff.md
-separate_attributes_gtf <- function(obj) {
-    obj %>%
-        dplyr::mutate(
-            gene_id                      = str_match(attributes, 'gene_id "([^"]+)"')[,2],
-            gene_version                 = str_match(attributes, 'gene_version "([^"]+)"')[,2],
-            gene_name                    = str_match(attributes, 'gene_name "([^"]+)"')[,2],
-            gene_source                  = str_match(attributes, 'gene_source "([^"]+)"')[,2],
-            gene_biotype                 = str_match(attributes, 'gene_biotype "([^"]+)"')[,2],
-            transcript_id                = str_match(attributes, 'transcript_id "([^"]+)"')[,2],
-            transcript_version           = str_match(attributes, 'transcript_version "([^"]+)"')[,2],
-            transcript_name              = str_match(attributes, 'transcript_name "([^"]+)"')[,2],
-            transcript_source            = str_match(attributes, 'transcript_source "([^"]+)"')[,2],
-            transcript_biotype           = str_match(attributes, 'transcript_biotype "([^"]+)"')[,2],
-            exon_number                  = str_match(attributes, 'exon_number "([^"]+)"')[,2],
-            exon_id                      = str_match(attributes, 'exon_id "([^"]+)"')[,2],
-            exon_version                 = str_match(attributes, 'exon_version "([^"]+)"')[,2],
-            protein_id                   = str_match(attributes, 'protein_id "([^"]+)"')[,2],
-            protein_version              = str_match(attributes, 'protein_version "([^"]+)"')[,2],
-            tag                          = str_match(attributes, 'tag "([^"]+)"')[,2],
-            projection_parent_transcript = str_match(attributes, 'projection_parent_transcript "([^"]+)"')[,2]) %>%
+#### separate_attributes ########################################
+separate_attributes <- function(obj) {
+    require(readr)
+    require(dplyr)
+    require(purrr)
+
+    add_att <- function(obj, name) {
+        cat(paste0("==> Adding ", name, "\n"))
+        pattern <- paste0(name, '[ =]"?([^"=;]+)"?')
+        mutate(obj, "{name}" := str_match(attributes, pattern)[, 2])
+    }
+
+    cat("==> Listing attributes\n")
+    to_add <-
+        obj %>%
+        separate_longer_delim(
+            cols  = attributes,
+            delim = stringr::regex(" ?; ?")) %>%
+        filter(attributes != "") %>%
+        separate_wider_delim(
+            cols  = attributes,
+            delim = stringr::regex("[ =]"),
+            names = c("attributes", "value")) %>%
+        distinct(attributes) %>%
+        pull(attributes)
+
+    for (i in to_add) {
+        obj <- add_att(obj, i)
+    }
+
+    obj <-
+        obj %>%
         dplyr::select(-attributes) %>%
         purrr::discard(~all(is.na(.)))
+
+    return(obj)
+
 }
 
 
 
-#### separate_attributes_gvf ########################################
-# https://github.com/The-Sequence-Ontology/Specifications/blob/master/gvf.md
-separate_attributes_gvf <- function(obj) {
-    obj %>%
-        dplyr::mutate(
-            id                = str_match(attributes, 'ID=([^=;]+)')[,2],
-            alias             = str_match(attributes, 'Alias=([^=;]+)')[,2],
-            dbxref            = str_match(attributes, 'Dbxref=([^=;]+)')[,2],
-            reference_seq     = str_match(attributes, 'Reference_seq=([^=;]+)')[,2],
-            variant_seq       = str_match(attributes, 'Variant_seq=([^=;]+)')[,2],
-            total_reads       = str_match(attributes, 'Total_reads=([^=;]+)')[,2],
-            zygosity          = str_match(attributes, 'Zygosity=([^=;]+)')[,2],
-            variant_freq      = str_match(attributes, 'Variant_freq=([^=;]+)')[,2],
-            variant_effect    = str_match(attributes, 'Variant_effect=([^=;]+)')[,2],
-            start_range       = str_match(attributes, 'Start_range=([^=;]+)')[,2],
-            end_range         = str_match(attributes, 'End_range=([^=;]+)')[,2],
-            phased            = str_match(attributes, 'Phased=([^=;]+)')[,2],
-            genotype          = str_match(attributes, 'Genotype=([^=;]+)')[,2],
-            individual        = str_match(attributes, 'Individual=([^=;]+)')[,2],
-            variant_codon     = str_match(attributes, 'Variant_codon=([^=;]+)')[,2],
-            reference_codon   = str_match(attributes, 'Reference_codon=([^=;]+)')[,2],
-            variant_aa        = str_match(attributes, 'Variant_aa=([^=;]+)')[,2],
-            reference_aa      = str_match(attributes, 'Reference_aa=([^=;]+)')[,2],
-            breakpoint_detail = str_match(attributes, 'Breakpoint_detail=([^=;]+)')[,2],
-            breakpoint_range  = str_match(attributes, 'Breakpoint_range=([^=;]+)')[,2],
-            sequence_context  = str_match(attributes, 'Sequence_context=([^=;]+)')[,2],
-            evidence_values   = str_match(attributes, 'evidence_values=([^=;]+)')[,2]) %>%
-        dplyr::select(-attributes) %>% 
-        purrr::discard(~all(is.na(.)))
+#### read_gxf_and_separate ###########################################
+read_gxf_and_separate <- function(file) {
+    gxf <- read_gxf(file = file)
+    gxf <- separate_attributes(gxf)
+
+    return(gxf)
 }
 
 
@@ -98,8 +90,8 @@ extract_seg <- function(file, out_file = NULL) {
     gtf <-
         read_gtf(file) %>%
         dplyr::mutate(
-            transcript_id = str_match(attributes, 'transcript_id "([^"]+)";')[,2],
-            gene_id       = str_match(attributes, 'gene_id "([^"]+)";')[,2])
+            transcript_id = str_match(attributes, 'transcript_id "([^"]+)";')[, 2],
+            gene_id       = str_match(attributes, 'gene_id "([^"]+)";')[, 2])
 
     # List Single Exon Transcript ids
     set <-
