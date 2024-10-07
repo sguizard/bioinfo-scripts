@@ -2,6 +2,8 @@ require(readr)
 require(dplyr)
 require(tidyr)
 require(purrr)
+require(stringr)
+
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff.md
 
 #### read_gff ###########################################
