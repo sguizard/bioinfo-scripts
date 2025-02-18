@@ -13,32 +13,32 @@ spec <- matrix(c(
     "annot"     , "a", "", "character"
 ), byrow = TRUE, ncol = 4)
 
-opt <- getopt(spec)
+        opt <- getopt(spec)
 
-if (!is.null(opt$help)) {
-    cat(getopt(spec, usage = TRUE))
-    q(status = 1)
-}
-if (is.null(opt$chr_length)) {
-    cat("MISSING OPTION: --chr_length \n")
-    q(status = 1)
-}
-if (is.null(opt$bw_dir)) {
-    cat("MISSING OPTION: --bw_dir \n")
-    q(status = 1)
-}
-if (is.null(opt$genome)) {
-    cat("MISSING OPTION: --genome \n")
-    q(status = 1)
-}
-if (is.null(opt$organism)) {
-    cat("MISSING OPTION: --organism \n")
-    q(status = 1)
-}
-if (is.null(opt$annot)) {
-    cat("MISSING OPTION: --annot \n")
-    q(status = 1)
-}
+        if (!is.null(opt$help)) {
+            cat(getopt(spec, usage = TRUE))
+            q(status = 1)
+        }
+        if (is.null(opt$chr_length)) {
+            cat("MISSING OPTION: --chr_length \n")
+            q(status = 1)
+        }
+        if (is.null(opt$bw_dir)) {
+            cat("MISSING OPTION: --bw_dir \n")
+            q(status = 1)
+        }
+        if (is.null(opt$genome)) {
+            cat("MISSING OPTION: --genome \n")
+            q(status = 1)
+        }
+        if (is.null(opt$organism)) {
+            cat("MISSING OPTION: --organism \n")
+            q(status = 1)
+        }
+        if (is.null(opt$annot)) {
+            cat("MISSING OPTION: --annot \n")
+            q(status = 1)
+        }
 
 # Loading libraries
 library(tidyverse)
