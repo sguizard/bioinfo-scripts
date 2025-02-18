@@ -10,6 +10,7 @@ library(GenomeInfoDb)    # SeqInfo
 library(rtracklayer)     # Export
 library(GenomicFeatures) # makeTxDbFromGFF makeTxDbFromEnsembl
 source("https://raw.githubusercontent.com/sguizard/bioinfo-scripts/refs/heads/master/utils/readGxf.R")
+# source("/home/sguizard/Work/Dev/github/sguizard/bioinfo-scripts/utils/readGxf.R")
 
 # Load rds files
 BCs <- readRDS("BCs_min1sample_min10reads.rds")
@@ -59,11 +60,12 @@ TCs_seg_ids <-
   pull(txID)
 
 seg_gtf %>% 
-  filter(gene_id %in% TCs_seg_ids) %>% 
+  dplyr::filter(gene_id %in% TCs_seg_ids) %>% 
   dplyr::select(sequence:gene_id, transcript_id) %>% 
-  mutate(attributes = paste0('gene_id="', gene_id, '";transcript_id="', transcript_id, '"')) %>% 
+  dplyr::mutate(attributes = paste0('gene_id "', gene_id, '"; transcript_id "', transcript_id, '"')) %>% 
   dplyr::select(-gene_id, -transcript_id) %>% 
-  write_tsv("chicken_mat_ensembl_gs_SEG_with_CAGE_peak.gtf")
+  dplyr::filter(feature %in% c("transcript", "exon")) %>%
+  write_tsv("chicken_mat_ensembl_gs_SEG_with_TC_CAGE_peak.gtf", col_names = FALSE, escape = "none")
 
 BCs$txID   <- NULL
 BCs$txType <- NULL
@@ -83,3 +85,50 @@ BCs <- assignTxType(BCs, txModels = txdb)
 # 8  antisense     0        0.0
 # 9 intergenic  1849       79.4
 
+BCs_seg <- BCs[BCs$txType %in% c("promoter", "proximal", "exon")]
+export.bed(BCs_seg, "BCs_min1sample_min10reads_SEG.bed")
+
+BCs_seg_ids <- 
+  as_tibble(BCs_seg) %>%
+  distinct(txID) %>%
+  separate_longer_delim(cols = txID, delim = ";") %>%
+  mutate(txID = 
+    str_replace_all(txID, '"', '') %>%
+    str_replace_all("\\.\\d+$", "")) %>% 
+  pull(txID)
+
+seg_gtf %>% 
+  dplyr::filter(gene_id %in% BCs_seg_ids) %>% 
+  dplyr::select(sequence:gene_id, transcript_id) %>% 
+  dplyr::mutate(attributes = paste0('gene_id "', gene_id, '"; transcript_id "', transcript_id, '"')) %>% 
+  dplyr::select(-gene_id, -transcript_id) %>% 
+  dplyr::filter(feature %in% c("transcript", "exon")) %>%
+  write_tsv("chicken_mat_ensembl_gs_SEG_with_BC_CAGE_peak.gtf", col_names = FALSE, escape = "none")
+
+extractAndWriteByType <- function(object = NULL, tss = TRUE, type = NULL) {
+  if (is.null(object) | is.null(type)) { print("object or type not set") }
+  if (isFALSE(tss)) { tss <- "BCs" }
+  else              { tss <- "TCs" }
+
+  CAGE_seg <- object[object$txType == type]
+  export.bed(CAGE_seg, paste0(tss, "_", type, "_min1sample_min10reads_SEG.bed"))
+
+  CAGE_seg_ids <- 
+    as_tibble(CAGE_seg) %>%
+    distinct(txID) %>%
+    separate_longer_delim(cols = txID, delim = ";") %>%
+    mutate(txID = 
+      str_replace_all(txID, '"', '') %>%
+      str_replace_all("\\.\\d+$", "")) %>% 
+    pull(txID)
+
+  seg_gtf %>% 
+    dplyr::filter(gene_id %in% CAGE_seg_ids) %>% 
+    dplyr::select(sequence:gene_id, transcript_id) %>% 
+    dplyr::mutate(attributes = paste0('gene_id "', gene_id, '"; transcript_id "', transcript_id, '"')) %>% 
+    dplyr::select(-gene_id, -transcript_id) %>% 
+    dplyr::filter(feature %in% c("transcript", "exon")) %>%
+    write_tsv(paste0("chicken_mat_ensembl_gs_SEG_with_", tss, "_", type, "_CAGE_peak.gtf"), col_names = FALSE, escape = "none")
+}
+
+extractAndWriteByType(object = TCs, tss = TRUE, type = "exon")
