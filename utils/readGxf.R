@@ -3,11 +3,19 @@ require(dplyr)
 require(tidyr)
 require(purrr)
 require(stringr)
+require(furrr)
 
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff.md
+# GFF1, GFF2 http://www.sanger.ac.uk/resources/software/gff/spec.html
+# GFF3 http://www.sequenceontology.org/gff3.shtml
+# GVF http://www.sequenceontology.org/resources/gvf.html
+# GTF http://mblab.wustl.edu/GTF22.html
+
 
 #### read_gff ###########################################
-read_gxf <- function(file) {
+read_gxf <- function(file, threads = 1) {
+    cat(paste0("==> Reading ", file, "\n"))
+
     readr::read_tsv(
         file,
         col_names = c(
@@ -30,54 +38,99 @@ read_gxf <- function(file) {
             strand     = col_character(),
             phase      = col_character(),
             attributes = col_character()),
-    comment = "#")
+    comment = "#",
+    num_threads = threads)
 }
 
 
 
 #### separate_attributes ########################################
-separate_attributes <- function(obj) {
+separate_attributes <- function(obj, threads = 1, nlines = 50000) {
+    extract_att <- function(.data) {
+        .data %>%
+            slice_head(n = nlines) %>%
+            separate_longer_delim(
+                cols  = attributes,
+                delim = stringr::regex(" ?; ?")) %>%
+            filter(attributes != "") %>%
+            separate_wider_delim(
+                cols  = attributes,
+                delim = stringr::regex("[ =]"),
+                names = c("attributes", "value")) %>%
+            distinct(attributes) %>%
+            pull(attributes) %>%
+            return()
+    }
+
     add_att <- function(obj, name) {
         cat(paste0("==> Adding ", name, "\n"))
         pattern <- paste0(name, '[ =]"?([^"=;]+)"?')
         mutate(obj, "{name}" := str_match(attributes, pattern)[, 2])
     }
 
-    cat("==> Listing attributes\n")
-    to_add <-
-        obj %>%
-        separate_longer_delim(
-            cols  = attributes,
-            delim = stringr::regex(" ?; ?")) %>%
-        filter(attributes != "") %>%
-        separate_wider_delim(
-            cols  = attributes,
-            delim = stringr::regex("[ =]"),
-            names = c("attributes", "value")) %>%
-        distinct(attributes) %>%
-        pull(attributes)
+    apply_add_att <- function(x) {
+        for (i in to_add) {
+            x <- add_att(x, i)
+        }
 
-    for (i in to_add) {
-        obj <- add_att(obj, i)
+        x <-
+            x %>%
+            dplyr::select(-attributes) %>%
+            purrr::discard(~all(is.na(.)))
+
+        return(x)
     }
 
-    obj <-
-        obj %>%
-        dplyr::select(-attributes) %>%
-        purrr::discard(~all(is.na(.)))
+    if (threads == 1) {
+        cat("==> Listing attributes\n")
+        to_add <-
+            obj %>%
+            extract_att()
+
+        obj <- apply_add_att(obj)
+    }
+    else {
+        cat("==> Setup workers\n")
+        plan(multisession, workers = threads)
+        options(future.globals.maxSize = 10240 * 1024^2)
+
+        cat(paste0("==> Spliting data in ", threads, " parts\n"))
+        obj <-
+            obj %>%
+            group_by((row_number() - 1) %/% (n() / threads)) %>%
+            nest %>%
+            pull(data)
+
+        cat("==> Listing attributes\n")
+        to_add <-
+            obj[[1]] %>%
+            slice_head(n = nlines) %>%
+            extract_att()
+
+        cat("==> Adding attributes\n")
+        obj <-
+            future_map(
+                obj,
+                apply_add_att,
+                .options = furrr_options(scheduling = 1)) %>%
+            bind_rows()
+    }
 
     return(obj)
-
 }
 
 
 
 #### read_gxf_and_separate ###########################################
-read_gxf_and_separate <- function(file) {
-    cat(paste0("==> Reading ", file, "\n"))
-    gxf <- read_gxf(file = file)
-    gxf <- separate_attributes(gxf)
-
+read_gxf_and_separate <- function(file, threads = 1) {
+    if (threads == 1) {
+        gxf <- read_gxf(file = file)
+        gxf <- separate_attributes(gxf)
+    }
+    else {
+        gxf <- read_gxf           (file = file, threads = threads)
+        gxf <- separate_attributes(obj  = gxf , threads = threads)
+    }
     return(gxf)
 }
 
